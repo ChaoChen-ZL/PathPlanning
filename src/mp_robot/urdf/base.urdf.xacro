@@ -1,0 +1,128 @@
+<robot name="my_base" xmlns:xacro="http://wiki.ros.org/xacro">
+<xacro:property name="PI" value="3.141"/>
+
+    <material name="black">
+        <color rgba="0.0 0.0 0.0 0.5" />
+    </material>
+
+    <xacro:property name="base_footprint_radius" value="0.001" /> 
+    <xacro:property name="base_link_length" value="0.35" /> 
+    <xacro:property name="base_link_width" value="0.35" /> 
+    <xacro:property name="base_link_height" value="0.12" />
+    <xacro:property name="base_link_mass" value="2" />
+
+    <xacro:property name="collision" value="0.02" /> 
+
+    <xacro:property name="earth_space" value="0.03" /> 
+
+
+    <link name="base_footprint">
+      <visual>
+        <geometry>
+          <sphere radius="${base_footprint_radius}" />
+        </geometry>
+      </visual>
+    </link>
+
+    <link name="base_link">
+      <visual>
+        <geometry>
+            <box size="${base_link_length} ${base_link_width} ${base_link_height}" />
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <material name="blue">
+          <color rgba="0 0.5 0.75 0.5" />
+        </material>
+      </visual>
+      <!-- collision： -->
+      <!-- collision visual -->
+      <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                 <box size="${base_link_length + collision} ${base_link_width + collision} ${base_link_height}" />
+            </geometry>
+      </collision>
+      <xacro:box_inertial_matrix m="${base_link_mass}" l="${base_link_length}" w="${base_link_width}" h="${base_link_height}" />
+    </link>
+
+    <joint name="base_link2base_footprint" type="fixed">
+      <parent link="base_footprint" />
+      <child link="base_link" />
+      <origin xyz="0 0 ${earth_space + base_link_height / 2 }" />
+    </joint>
+
+
+    <xacro:property name="wheel_radius" value="0.065" />
+    <xacro:property name="wheel_length" value="0.03" />
+    <xacro:property name="wheel_mass" value="0.5" />
+
+    
+    <xacro:macro name="add_wheels" params="name flag_left flag_front">
+      <link name="${name}_wheel">
+        <visual>
+          <geometry>
+            <cylinder radius="${wheel_radius}" length="${wheel_length}" />
+          </geometry>
+          <origin xyz="0.0 0.0 0.0" rpy="${flag_left * PI / 2} ${flag_front * PI / 2} 0.0 "/>
+          <material name="black" />
+        </visual>
+        
+        <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="${flag_left * PI / 2} ${flag_front * PI / 2} 0.0 "/>
+        <geometry>
+            <cylinder radius="${wheel_radius}" length="${wheel_length + collision}" />
+        </geometry>
+        </collision>
+      <xacro:cylinder_inertial_matrix m="${wheel_mass}" r="${wheel_radius}" h="${wheel_length}" />
+      </link>
+
+      <joint name="${name}_wheel2base_link" type="continuous">
+        <parent link="base_link" />
+        <child link="${name}_wheel" />
+        <origin xyz="${flag_front * base_link_length / 2 } ${flag_left * base_link_width / 2 } ${-(earth_space + base_link_height / 2 - wheel_radius) }" />
+        <axis xyz="0 1 0" />
+      </joint>
+    </xacro:macro>
+     <![CDATA[
+    <xacro:add_wheels name="front" flag_left="0" flag_front="1"  />
+    <xacro:add_wheels name="back" flag_left="0" flag_front="-1" />
+    ]]>
+    <xacro:add_wheels name="left" flag_left="1" flag_front="0" />
+    <xacro:add_wheels name="right" flag_left="-1" flag_front="0" />
+   
+
+    <xacro:property name="support_wheel_radius" value="0.015" /> 
+    <xacro:property name="support_wheel_mass" value="0.1" />
+
+
+   
+    <xacro:macro name="add_support_wheel" params="name flag" >
+      <link name="${name}_wheel">
+        <visual>
+            <geometry>
+                <sphere radius="${support_wheel_radius}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="black" />
+        </visual>
+      <collision>
+            <geometry>
+                <sphere radius="${support_wheel_radius}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </collision>
+        <xacro:sphere_inertial_matrix m="${support_wheel_mass}" r="${support_wheel_radius}" />  
+      </link>
+
+      <joint name="${name}_wheel2base_link" type="continuous">
+          <parent link="base_link" />
+          <child link="${name}_wheel" />
+          <origin xyz="${flag * (base_link_length / 2 - support_wheel_radius)} 0 ${-(base_link_height / 2 + earth_space / 2)}" />
+          <axis xyz="1 1 1" />
+      </joint>
+    </xacro:macro>
+
+    <xacro:add_support_wheel name="front" flag="1" />
+    <xacro:add_support_wheel name="back" flag="-1" />
+    
+</robot>

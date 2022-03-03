@@ -1,0 +1,23 @@
+<launch>
+    <!--node pkg="rviz" type="rviz" name="rviz" /-->
+    <!--node pkg="rviz" type="rviz" name="rviz" args="-d $(find urdf02_gazebo)/config/show_robot.rviz" /-->
+
+    <!-- 将 Urdf 文件的内容加载到参数服务器 -->
+    <param name="robot_description" command="$(find xacro)/xacro $(find mp_robot)/urdf/car.urdf.xacro" />
+    <!-- 启动 gazebo -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find mp_robot)/worlds/box_house.world" />
+    </include>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find mp_robot)/config/show_robot.rviz" />
+
+    <!-- 在 gazebo 中显示机器人模型 -->
+    <node pkg="gazebo_ros" type="spawn_model" name="model" args="-urdf -model my_car_camera -param robot_description"  />
+
+
+   
+
+    <!-- 关节以及机器人状态发布节点 -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+</launch>
